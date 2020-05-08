@@ -21,3 +21,14 @@ C:\Users\DungNgoc\Desktop\DesisionTree\DesisionTree\bin\Debug\DesisionTree.exe.c
 C:\Users\DungNgoc\Desktop\DesisionTree\DesisionTree\bin\Debug\DesisionTree.exe
 C:\Users\DungNgoc\Desktop\DesisionTree\DesisionTree\bin\Debug\DesisionTree.pdb
 C:\Users\DungNgoc\Desktop\DesisionTree\DesisionTree\obj\Debug\DesisionTree.csproj.CopyComplete
+C:\Users\ASUS\Desktop\ID3\DecisionTrees\DesisionTree\DesisionTree\bin\Debug\DesisionTree.exe.config
+C:\Users\ASUS\Desktop\ID3\DecisionTrees\DesisionTree\DesisionTree\bin\Debug\DesisionTree.exe
+C:\Users\ASUS\Desktop\ID3\DecisionTrees\DesisionTree\DesisionTree\bin\Debug\DesisionTree.pdb
+C:\Users\ASUS\Desktop\ID3\DecisionTrees\DesisionTree\DesisionTree\obj\Debug\DesisionTree.csprojAssemblyReference.cache
+C:\Users\ASUS\Desktop\ID3\DecisionTrees\DesisionTree\DesisionTree\obj\Debug\DesisionTree.Form1.resources
+C:\Users\ASUS\Desktop\ID3\DecisionTrees\DesisionTree\DesisionTree\obj\Debug\DesisionTree.Properties.Resources.resources
+C:\Users\ASUS\Desktop\ID3\DecisionTrees\DesisionTree\DesisionTree\obj\Debug\DesisionTree.csproj.GenerateResource.cache
+C:\Users\ASUS\Desktop\ID3\DecisionTrees\DesisionTree\DesisionTree\obj\Debug\DesisionTree.csproj.CoreCompileInputs.cache
+C:\Users\ASUS\Desktop\ID3\DecisionTrees\DesisionTree\DesisionTree\obj\Debug\DesisionTree.csproj.CopyComplete
+C:\Users\ASUS\Desktop\ID3\DecisionTrees\DesisionTree\DesisionTree\obj\Debug\DesisionTree.exe
+C:\Users\ASUS\Desktop\ID3\DecisionTrees\DesisionTree\DesisionTree\obj\Debug\DesisionTree.pdb

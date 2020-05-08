@@ -8,6 +8,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Data.OleDb;
+using System.Globalization;
+using System.Runtime.InteropServices;
 
 namespace DesisionTree
 {
@@ -17,6 +19,7 @@ namespace DesisionTree
         private DataTable dt;
         private Node decisionTrees;
         private int levels = 0;
+        private float hs = 0;
         public Form1()
         {
             InitializeComponent();
@@ -24,7 +27,7 @@ namespace DesisionTree
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            
+
         }
 
         private void bFlatBtnChooseFile_Click(object sender, EventArgs e)
@@ -38,7 +41,7 @@ namespace DesisionTree
         {
             // string PathConn = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" + Txt_File.Text + ";Extended properties=\"Excel 8.0;HDR=Yes;\";";
             richTextBox1.Clear();
-       
+
             string PathConn = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + Txt_File.Text + ";Extended properties=\"Excel 12.0 Xml;HDR=Yes;\";";
             OleDbConnection conn = new OleDbConnection(PathConn);
             OleDbDataAdapter myDataAdapter = new OleDbDataAdapter("Select *from [" + Txt_Sheet.Text + "$]", conn);
@@ -62,11 +65,29 @@ namespace DesisionTree
             decision.Remove(result);
 
 
+            int total = attributes.Count;
+            List<float> calcultaHS = new List<float>();
+            foreach (Answer question in result.possibleAnswers)
+            {
+                int count = 0;
+                foreach (Attribute attribute in attributes)
+                {
+                    if (question.answer == attribute.answers[attribute.answers.Count - 1])
+                        count++;
+                }
+                calcultaHS.Add(count);
+            }
+            hs = -calcultaHS[0] / total * (float)Math.Log(calcultaHS[0] / total) - calcultaHS[1] / total * (float)Math.Log(calcultaHS[1] / total);
+            richTextBox1.Text += "HS: " + -calcultaHS[0] + "/" + total + "*log(" + calcultaHS[0] + "/" + total + ")" + -calcultaHS[1] + "/" + total + "*log(" + calcultaHS[1] + "/" + total + ")=";
+            richTextBox1.Text += hs + "\n\n";
+
+
+
             decisionTrees = new Node(null, decision, attributes);
-            result_Algrithm(attributes, result, decision);
-            levels = partition(decisionTrees, result, 1) + 1;
+
+            levels = partition(decisionTrees, result, 1, String.Empty) + 1;
             graph_Panel.Refresh();
-          
+
             return;
         }
 
@@ -136,22 +157,27 @@ namespace DesisionTree
                 unitVectorCount.Add(count);
                 //richTextBox1.Text += featureVector;
             }
-            
+
             return unitVectorCount.IndexOf(unitVectorCount.Max());
         }
 
+        private int getBestFeature(List<float> hsList)
+        {
+            return hsList.IndexOf(hsList.Min());
+        }
 
-        private List<List<List<float>>> computeFeatureVectors(List<DecisionQuery> decisionQueries, List<Attribute> attributes, DecisionQuery result)
+        private List<List<List<float>>> computeFeatureVectors(List<DecisionQuery> decisionQueries, List<Attribute> attributes, DecisionQuery result, ref List<List<List<KeyValuePair<float, float>>>> featurePairsVectors)
         {
             List<List<List<float>>> featureVectors = new List<List<List<float>>>();
             for (int c = 0; c < decisionQueries.Count; c++)
             {
                 List<List<float>> featureVector = new List<List<float>>();
+                List<List<KeyValuePair<float, float>>> lKeyValuePairs = new List<List<KeyValuePair<float, float>>>();
                 for (int i = 0; i < decisionQueries[c].possibleAnswers.Count; i++)
                 {
                     List<float> vector = new List<float>();
-                    // List<float> ratioHS = new List<float>();
-      
+                    List<KeyValuePair<float, float>> keyValue = new List<KeyValuePair<float, float>>();
+
                     for (int j = 0; j < result.possibleAnswers.Count; j++)
                     {
                         int count = 0;
@@ -169,36 +195,84 @@ namespace DesisionTree
 
                         }
                         vector.Add((float)count / total);
+                        keyValue.Add(new KeyValuePair<float, float>(count, total));
                     }
+                    lKeyValuePairs.Add(keyValue);
                     featureVector.Add(vector);
                     //richTextBox1.Text += "H(S" + decisionQueries[c].possibleAnswers[i].answer +featureVector[i]..ToString()+ ")="+"\n";
                 }
                 featureVectors.Add(featureVector);
+                featurePairsVectors.Add(lKeyValuePairs);
             }
-        
+
             return featureVectors;
         }
 
-        private int partition(Node parent, DecisionQuery result, int level)
+        private int partition(Node parent, DecisionQuery result, int level, string possibleAnswerBranch)
         {
             if (parent.attributes.Count == 0 || parent.questions.Count == 0 || checkPartition(parent.attributes))
             {
                 return level;
-               
-            }
-            List<List<List<float>>> featureVectors = computeFeatureVectors(parent.questions, parent.attributes, result);
 
-            int bestFeature = getBestFeature(featureVectors);
-            //richTextBox1.Text += "  Ta chọn đặc tính tốt nhất: "+ parent.questions[bestFeature].question.ToString()+"\n";
+            }
+            List<List<List<KeyValuePair<float, float>>>> featurePairsVectors = new List<List<List<KeyValuePair<float, float>>>>();
+            List<List<List<float>>> featureVectors = computeFeatureVectors(parent.questions, parent.attributes, result, ref featurePairsVectors);
+            List<float> hsList = new List<float>();
+            for (int i = 0; i < featureVectors.Count; i++)
+            {
+
+                List<List<KeyValuePair<float, float>>> hs_question = new List<List<KeyValuePair<float, float>>>();
+                List<KeyValuePair<float, float>> hs_question1 = new List<KeyValuePair<float, float>>();
+                for (int j = 0; j < featureVectors[i].Count; j++)
+                {
+                    
+                    richTextBox1.Text += "H(S" + possibleAnswerBranch + "_"  + parent.questions[i].possibleAnswers[j].answer + "):";
+                    float hs = 0;
+                    for (int k = 0; k < featureVectors[i][j].Count; k++)
+                    {
+
+                        float hs1 = -featurePairsVectors[i][j][k].Key / featurePairsVectors[i][j][k].Value * (float)Math.Log(featurePairsVectors[i][j][k].Key / featurePairsVectors[i][j][k].Value);
+                        richTextBox1.Text += -featurePairsVectors[i][j][k].Key + "/" + featurePairsVectors[i][j][k].Value;
+                        richTextBox1.Text += "*log(" + featurePairsVectors[i][j][k].Key + "/" + featurePairsVectors[i][j][k].Value + ")";
+                        if (featurePairsVectors[i][j][k].Key == 0)
+                            hs1 = 0;
+                        hs += hs1;
+                    }
+                    hs_question1.Add(new KeyValuePair<float, float>(hs, featurePairsVectors[i][j][0].Value));
+                    richTextBox1.Text += "=" + hs + "\n";
+                }
+                float hs2 = 0;
+                float total = 0;
+                richTextBox1.Text += "H(S" + parent.questions[i].question + "):";
+
+       
+                for (int t = 0; t < hs_question1.Count;  t++)
+                {
+                    total += hs_question1[t].Value;
+                }
+                for (int t = 0; t < hs_question1.Count; t++)
+                {
+                    hs2 += hs_question1[t].Key * hs_question1[t].Value / total;
+                    richTextBox1.Text += hs_question1[t].Value + "/" + total + "*" + hs_question1[t].Key;
+                    if (t != hs_question1.Count - 1)
+                        richTextBox1.Text += "+";
+                }
+                richTextBox1.Text += "=" + hs2 + "\n\n";
+                hsList.Add(hs2);
+            }
+
+            //int bestFeature = getBestFeature(featureVectors);
+            int bestFeature = getBestFeature(hsList);
+
+            richTextBox1.Text += "  Ta chọn đặc tính tốt nhất: "+ parent.questions[bestFeature].question.ToString()+"\n";
             parent.partition_question = parent.questions[bestFeature];
             List<DecisionQuery> brandClauses = new List<DecisionQuery>();
             for (int i = 0; i < parent.questions.Count; i++)
             {
-               
+
                 if (i != bestFeature)
-                { 
+                {
                     brandClauses.Add(parent.questions[i]);
-                  //  
                 }
             }
             List<List<Attribute>> brandsAttributes = new List<List<Attribute>>();
@@ -215,7 +289,7 @@ namespace DesisionTree
                         brandAttribute.Add(temp);
 
                     }
-                    
+
                 }
                 brandsAttributes.Add(brandAttribute);
             }
@@ -223,11 +297,11 @@ namespace DesisionTree
             int maxlv = level;
             for (int i = 0; i < parent.questions[bestFeature].possibleAnswers.Count; i++)
             {
-               // richTextBox1.Text += "-----Xét " + parent.questions[bestFeature].possibleAnswers.ToString() + "------";
+                // richTextBox1.Text += "-----Xét " + parent.questions[bestFeature].possibleAnswers.ToString() + "------";
                 Node brand = new Node(null, brandClauses, brandsAttributes[i]);
                 if (featureVectors[bestFeature][i].Max() != 1)
                 {
-                    int lv = partition(brand, result, level + 1);
+                    int lv = partition(brand, result, level + 1, parent.questions[bestFeature].possibleAnswers[i].answer);
                     if (lv > maxlv) maxlv = lv;
                 }
                 parent.branch.Add(brand);
@@ -276,7 +350,7 @@ namespace DesisionTree
                 pos_x = (int)(pos_x + (area - (question_size.Width - question_size.Height)) / 2);
                 g.DrawRectangle(new Pen(Color.Black), pos_x, pos_y, question_size.Width, question_size.Height);
                 g.DrawString(node.partition_question.question, font, new SolidBrush(Color.Red), pos_x, pos_y);
-             
+
             }
             else
             {
@@ -286,7 +360,7 @@ namespace DesisionTree
                     attributeNames += attribute.title + "(" + attribute.answers[attribute.answers.Count - 1] + ")" + "\n";
                 }
                 g.DrawString(attributeNames, font, new SolidBrush(Color.Black), pos_x, pos_y);
-               
+
 
             }
             if (node.branch != null)
@@ -343,7 +417,7 @@ namespace DesisionTree
             int temp = 0;
             for (int i = 0; i < decisions.Count; i++)
             {
-               richTextBox1.Text += "Xét " + decisions[i].question.ToString() + "\n";
+                richTextBox1.Text += "Xét " + decisions[i].question.ToString() + "\n";
                 float Hsum = 0;
                 for (int j = 0; j < decisions[i].possibleAnswers.Count; j++)
                 {
@@ -385,7 +459,7 @@ namespace DesisionTree
             }
 
 
-            for(int i = 0; i<decisions[temp].possibleAnswers.Count; i++)
+            for (int i = 0; i < decisions[temp].possibleAnswers.Count; i++)
             {
 
             }

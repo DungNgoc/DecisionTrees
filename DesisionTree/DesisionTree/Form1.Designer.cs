@@ -155,8 +155,7 @@
             this.Txt_File.Name = "Txt_File";
             this.Txt_File.Size = new System.Drawing.Size(871, 35);
             this.Txt_File.TabIndex = 9;
-            this.Txt_File.Text = "E:\\New folder (3)\\New folder (2)\\2019-2010 SEASION II\\SEASION II\\Applications of " +
-    "intelligent algorithms\\DesisionTrees.xlsx";
+            this.Txt_File.Text = "C:\\Users\\ASUS\\Desktop\\ID3\\DecisionTrees\\DesisionTrees.xlsx";
             // 
             // Dgv_Excel
             // 
@@ -179,6 +178,7 @@
             dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
             dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
             this.Dgv_Excel.RowHeadersDefaultCellStyle = dataGridViewCellStyle2;
+            this.Dgv_Excel.RowHeadersWidth = 62;
             this.Dgv_Excel.RowTemplate.Height = 28;
             this.Dgv_Excel.Size = new System.Drawing.Size(753, 312);
             this.Dgv_Excel.TabIndex = 10;
